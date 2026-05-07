@@ -48,10 +48,3 @@ chmod +x uninstall.sh
 ./uninstall.sh
 ```
 Asks for confirmation, then removes the theme, oh-my-zsh, `.zshrc` (+ backups), fzf, and the Meslo Nerd Font. Leaves Homebrew and zsh itself in place.
-
-## What the prompt looks like
-```
- 📂 ~/path  ⎇ branch  👾 venv  ⚡ 123ms
->
-```
-Segments are conditional: git only shows inside a repo, venv only when one's active, time only after a command runs.
