@@ -2,6 +2,8 @@
 
 Portable bundle of my zsh prompt config.
 
+![preview](screenshots/preview.png)
+
 ## Contents
 - `install.sh` — bootstraps everything on a fresh macOS
 - `uninstall.sh` — reverts to fresh-Mac state (removes oh-my-zsh, theme, .zshrc, fzf, font)
