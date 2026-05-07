@@ -4,6 +4,18 @@ Portable bundle of my zsh prompt config.
 
 ![preview](screenshots/preview.png)
 
+## Usage
+Once installed and you've opened a new shell:
+
+- **`cd <Tab>`** — opens a fuzzy directory menu (also works for `git checkout`, `brew install`, `kill`, and every other command)
+- **`↑` / `↓`** to navigate the menu — start typing to filter
+- **`Enter`** to select — **`Esc`** (or `Ctrl+C`) to cancel and go back
+- **`Ctrl+R`** — fuzzy search through shell history
+- **`Ctrl+T`** — fuzzy file picker (inserts the chosen path into your current command)
+- **`Alt+C`** — fuzzy `cd` into a subdirectory
+- **`**<Tab>`** — alternate trigger for fuzzy picker mid-command (e.g. `vim **<Tab>`)
+- **`→`** (right arrow) — accept the grey ghost-text suggestion from `zsh-autosuggestions`
+
 ## Contents
 - `install.sh` — bootstraps everything on a fresh macOS
 - `uninstall.sh` — reverts to fresh-Mac state (removes oh-my-zsh, theme, .zshrc, fzf, font)
@@ -36,14 +48,6 @@ chmod +x uninstall.sh
 ./uninstall.sh
 ```
 Asks for confirmation, then removes the theme, oh-my-zsh, `.zshrc` (+ backups), fzf, and the Meslo Nerd Font. Leaves Homebrew and zsh itself in place.
-
-## fzf keybindings
-Once installed, in any new shell:
-- `<Tab>` — fuzzy completion menu for **every** command (cd, git checkout, brew install, kill, etc.) — via fzf-tab
-- `Ctrl+R` — fuzzy history search
-- `Ctrl+T` — fuzzy file picker (inserts the picked path into your command line)
-- `Alt+C` — fuzzy `cd` to a subdirectory
-- `**<Tab>` — alternate trigger for fuzzy picker mid-command (e.g. `vim **<Tab>`)
 
 ## What the prompt looks like
 ```
