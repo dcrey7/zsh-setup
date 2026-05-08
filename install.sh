@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Bootstraps a complete zsh prompt setup on a fresh macOS:
-#   Homebrew -> Meslo Nerd Font -> fzf -> oh-my-zsh -> custom plugins -> theme + .zshrc -> default shell
+# Bootstraps a complete zsh prompt setup on a fresh macOS or Ubuntu:
+#   pkg manager -> Meslo Nerd Font -> fzf -> oh-my-zsh -> custom plugins -> theme + .zshrc -> default shell
+# macOS uses Homebrew; Ubuntu uses apt + a direct Nerd Font download.
 # Custom plugins: fzf-tab, zsh-autosuggestions, fast-syntax-highlighting
 # Idempotent -- safe to re-run.
 set -euo pipefail
@@ -8,45 +9,104 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # ---------------------------------------------------------------------------
-echo "==> 1/8  Homebrew"
-if ! command -v brew >/dev/null 2>&1; then
-  echo "    Installing Homebrew..."
-  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-  # Make brew available in this shell session
-  if [[ -x /opt/homebrew/bin/brew ]]; then
-    eval "$(/opt/homebrew/bin/brew shellenv)"
-  elif [[ -x /usr/local/bin/brew ]]; then
-    eval "$(/usr/local/bin/brew shellenv)"
+echo "==> 0/8  Detecting OS"
+case "$(uname -s)" in
+  Darwin)
+    OS="macos"
+    echo "    macOS detected."
+    ;;
+  Linux)
+    if [[ -r /etc/os-release ]] && grep -qiE '^(ID|ID_LIKE)=.*(ubuntu|debian)' /etc/os-release; then
+      OS="ubuntu"
+      echo "    Ubuntu/Debian detected."
+    else
+      echo "    ERROR: Linux detected but not Ubuntu/Debian. Only macOS and Ubuntu are supported." >&2
+      exit 1
+    fi
+    ;;
+  *)
+    echo "    ERROR: Unsupported OS '$(uname -s)'. Only macOS and Ubuntu are supported." >&2
+    exit 1
+    ;;
+esac
+
+# ---------------------------------------------------------------------------
+echo "==> 1/8  Package manager"
+if [[ "$OS" == "macos" ]]; then
+  if ! command -v brew >/dev/null 2>&1; then
+    echo "    Installing Homebrew..."
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    if [[ -x /opt/homebrew/bin/brew ]]; then
+      eval "$(/opt/homebrew/bin/brew shellenv)"
+    elif [[ -x /usr/local/bin/brew ]]; then
+      eval "$(/usr/local/bin/brew shellenv)"
+    fi
+  else
+    echo "    Already installed: $(brew --version | head -1)"
   fi
 else
-  echo "    Already installed: $(brew --version | head -1)"
+  echo "    Refreshing apt index (sudo required)..."
+  sudo apt-get update -y
+  echo "    Installing prerequisites (curl, git, unzip, fontconfig)..."
+  sudo apt-get install -y curl git unzip fontconfig
 fi
 
 # ---------------------------------------------------------------------------
 echo "==> 2/8  zsh"
 if ! command -v zsh >/dev/null 2>&1; then
-  echo "    Installing zsh via Homebrew..."
-  brew install zsh
+  if [[ "$OS" == "macos" ]]; then
+    echo "    Installing zsh via Homebrew..."
+    brew install zsh
+  else
+    echo "    Installing zsh via apt..."
+    sudo apt-get install -y zsh
+  fi
 else
   echo "    Already installed: $(zsh --version)"
 fi
 
 # ---------------------------------------------------------------------------
 echo "==> 3/8  Meslo Nerd Font"
-if brew list --cask font-meslo-lg-nerd-font >/dev/null 2>&1; then
-  echo "    Already installed."
+if [[ "$OS" == "macos" ]]; then
+  if brew list --cask font-meslo-lg-nerd-font >/dev/null 2>&1; then
+    echo "    Already installed."
+  else
+    echo "    Installing via Homebrew Cask..."
+    brew install --cask font-meslo-lg-nerd-font
+  fi
 else
-  echo "    Installing via Homebrew Cask..."
-  brew install --cask font-meslo-lg-nerd-font
+  font_dir="$HOME/.local/share/fonts/Meslo"
+  if fc-list 2>/dev/null | grep -qi 'MesloLG.*Nerd Font'; then
+    echo "    Already installed (found via fc-list)."
+  else
+    echo "    Downloading Meslo Nerd Font v3.4.0..."
+    mkdir -p "$font_dir"
+    tmp_zip="$(mktemp --suffix=.zip)"
+    curl -fL -o "$tmp_zip" \
+      https://github.com/ryanoasis/nerd-fonts/releases/download/v3.4.0/Meslo.zip
+    unzip -o -q "$tmp_zip" -d "$font_dir"
+    rm -f "$tmp_zip"
+    echo "    Refreshing font cache..."
+    fc-cache -f "$font_dir"
+  fi
 fi
 
 # ---------------------------------------------------------------------------
 echo "==> 4/8  fzf"
-if brew list fzf >/dev/null 2>&1; then
-  echo "    Already installed: $(fzf --version)"
+if [[ "$OS" == "macos" ]]; then
+  if brew list fzf >/dev/null 2>&1; then
+    echo "    Already installed: $(fzf --version)"
+  else
+    echo "    Installing via Homebrew..."
+    brew install fzf
+  fi
 else
-  echo "    Installing via Homebrew..."
-  brew install fzf
+  if dpkg -s fzf >/dev/null 2>&1; then
+    echo "    Already installed: $(fzf --version)"
+  else
+    echo "    Installing via apt..."
+    sudo apt-get install -y fzf
+  fi
 fi
 echo "    Keybindings wired up by '~/.zshrc' via 'source <(fzf --zsh)'"
 
@@ -128,13 +188,32 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-cat <<'EOF'
-
-✓ Done.
-
-Final manual step (one time, can't be scripted reliably):
-  Open Terminal.app → Settings (⌘,) → Profiles → your active profile
-  → Text tab → Change Font... → pick "MesloLGL Nerd Font" or "MesloLGS Nerd Font"
-
-Then open a new terminal (or run: exec zsh) to see the prompt.
+echo ""
+echo "✓ Done."
+echo ""
+echo "Final manual step (one time, can't be scripted reliably):"
+echo "  Set your terminal font to a Meslo Nerd Font variant (e.g. 'MesloLGM Nerd Font')."
+if [[ "$OS" == "macos" ]]; then
+  cat <<'EOF'
+    Terminal.app  -> Settings (⌘,) -> Profiles -> active profile
+                  -> Text tab -> Change Font... -> "MesloLGM Nerd Font"
+    iTerm2        -> Settings (⌘,) -> Profiles -> Text -> Font
 EOF
+else
+  cat <<'EOF'
+    GNOME Terminal -> Preferences -> your profile -> Text
+                   -> tick "Custom font" -> "MesloLGM Nerd Font"
+    Konsole        -> Settings -> Edit Current Profile -> Appearance -> Font
+    Tilix / Terminator / Alacritty / kitty -> see each app's font setting
+EOF
+fi
+echo ""
+echo "Activating the new shell:"
+echo "  - Right now, in this same terminal:  exec zsh"
+echo "    (replaces the running shell in-place; you'll see the new prompt + plugins immediately)"
+if [[ "$OS" == "macos" ]]; then
+  echo "  - For every NEW terminal from now on:  quit and reopen Terminal.app"
+else
+  echo "  - For every NEW terminal from now on:  log out of your desktop session and log back in"
+  echo "    (chsh only takes effect for new login sessions, not for already-running ones)"
+fi
