@@ -3,6 +3,7 @@ setopt PROMPT_SUBST
 export VIRTUAL_ENV_DISABLE_PROMPT=1   # suppress venv's auto "(name)" prefix
 
 # Colors
+USER_BG="#8B4513"; USER_FG="#ffffff"   # saddle brown (deep reddish-brown)
 PATH_BG="#1e3a8a"; PATH_FG="#ffffff"
 GIT_BG="#15803d";  GIT_FG="#ffffff"
 PY_BG="#c2410c";   PY_FG="#ffffff"
@@ -27,8 +28,11 @@ precmd() {
 _git_branch() { git symbolic-ref --short HEAD 2>/dev/null || git rev-parse --short HEAD 2>/dev/null }
 
 _build_prompt() {
-  local prev=$PATH_BG
-  print -n "%K{$PATH_BG}%F{$PATH_FG} 🗂️  %~ "
+  print -n "%K{$USER_BG}%F{$USER_FG} 🕺 %n "
+  local prev=$USER_BG
+
+  print -n "%K{$PATH_BG}%F{$prev}${SEP}%F{$PATH_FG} 🗂️  %~ "
+  prev=$PATH_BG
 
   local b=$(_git_branch)
   if [[ -n $b ]]; then
