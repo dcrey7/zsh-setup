@@ -84,8 +84,10 @@ echo "  • Your shell history (.zsh_history)"
 echo "  • Other personal zsh files (.zprofile, .zshenv, etc.)"
 echo "  • Terminal app font setting (manual step shown at end)"
 echo ""
-read -r -p "Continue? [y/N] " confirm
-[[ "${confirm:-}" =~ ^[Yy] ]] || { echo "Aborted."; exit 0; }
+if [[ "${1:-}" != "-y" && "${1:-}" != "--yes" ]]; then
+  read -r -p "Continue? [y/N] " confirm
+  [[ "${confirm:-}" =~ ^[Yy] ]] || { echo "Aborted."; exit 0; }
+fi
 
 # ---------------------------------------------------------------------------
 echo "==> 1/6  oh-my-zsh custom plugins (fzf-tab, autosuggestions, fast-syntax-highlighting)"
