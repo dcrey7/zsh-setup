@@ -44,7 +44,7 @@ The script auto-detects the OS (macOS, Ubuntu/Debian, or Arch/CachyOS) and uses 
    - [zsh-autosuggestions](https://github.com/zsh-users/zsh-autosuggestions) — ghost-text history suggestions (accept with `→`)
    - [fast-syntax-highlighting](https://github.com/zdharma-continuum/fast-syntax-highlighting) — colors commands as you type
 8. **Theme + `~/.zshrc`** — theme copied into `~/.oh-my-zsh/custom/themes/`, existing `~/.zshrc` backed up with a timestamp suffix
-9. **Default shell** — `chsh -s "$(command -v zsh)"`
+9. **Default shell** — tries `chsh -s "$(command -v zsh)"` first, then falls back to `sudo chsh -s "$(command -v zsh)" "$USER"` if needed
 
 After it finishes, set your terminal font to **MesloLGM Nerd Font** (or any Meslo Nerd Font variant) — that step has to be done in the terminal app's preferences:
 - macOS Terminal.app / iTerm2 — Settings → Profiles → Text → Font
@@ -62,7 +62,7 @@ On Arch and CachyOS, the installer uses `pacman` for the system packages. It ref
 - **Right now, in the same terminal:** run `exec zsh`. It replaces the running shell in-place and you'll see the new prompt, autosuggestions, and fuzzy tab immediately.
 - **For every new terminal you open from now on:** **log out of your desktop session and log back in** (on Ubuntu/Linux) or **quit and reopen Terminal.app** (on macOS). New terminal windows will then start in zsh by default — no `exec zsh` needed.
 
-If after logging back in your terminals still open in bash on Ubuntu, check `getent passwd $USER | cut -d: -f7` — it should print `/usr/bin/zsh`. If it doesn't, re-run `chsh -s "$(command -v zsh)"`. If it does but GNOME Terminal still launches bash, look in **Preferences → your profile → Command tab** and make sure "Run command as a login shell" / "Custom command" is unchecked.
+If after logging back in your terminals still open in bash on Ubuntu, check `getent passwd $USER | cut -d: -f7` — it should print `/usr/bin/zsh`. If it doesn't, run `sudo chsh -s "$(command -v zsh)" "$USER"`. If it does but GNOME Terminal still launches bash, look in **Preferences → your profile → Command tab** and make sure "Run command as a login shell" / "Custom command" is unchecked.
 
 ## Uninstall
 ```sh

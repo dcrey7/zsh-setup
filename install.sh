@@ -197,16 +197,27 @@ echo "    Wrote new ~/.zshrc"
 # ---------------------------------------------------------------------------
 echo "==> 8/8  Default shell"
 zsh_path="$(command -v zsh)"
-if [[ "${SHELL:-}" != "$zsh_path" ]]; then
+login_user="${USER:-$(whoami)}"
+current_shell="$(getent passwd "$login_user" 2>/dev/null | cut -d: -f7 || true)"
+if [[ "$current_shell" == "$zsh_path" ]]; then
+  echo "    Already set to zsh ($zsh_path)."
+else
   # Add to /etc/shells if missing (chsh requires this)
   if ! grep -qx "$zsh_path" /etc/shells 2>/dev/null; then
     echo "    Adding $zsh_path to /etc/shells (sudo required)..."
     echo "$zsh_path" | sudo tee -a /etc/shells >/dev/null
   fi
   echo "    Setting zsh as default login shell..."
-  chsh -s "$zsh_path"
-else
-  echo "    Already set to $zsh_path"
+  if chsh -s "$zsh_path" 2>/dev/null; then
+    echo "    Default shell set to zsh via chsh."
+  elif sudo -n chsh -s "$zsh_path" "$login_user" 2>/dev/null; then
+    echo "    Default shell set to zsh via passwordless sudo."
+  elif sudo chsh -s "$zsh_path" "$login_user"; then
+    echo "    Default shell set to zsh via sudo (you may have typed your password)."
+  else
+    echo "    WARNING: could not set zsh as default shell."
+    echo "    Run this manually: sudo chsh -s $zsh_path $login_user"
+  fi
 fi
 
 # ---------------------------------------------------------------------------
