@@ -30,3 +30,9 @@ zstyle ':completion:*' menu select                                              
 zstyle ':completion:*' matcher-list '' 'm:{a-zA-Z}={A-Za-z}' 'r:|=*' 'l:|=* r:|=*'  # case-insensitive + partial-word
 zstyle ':completion:*' list-colors ${(s.:.)LS_COLORS}                               # color the menu
 zstyle ':completion:*' group-name ''                                                # group results by type
+
+# Surface "no matches" and group headers in the completion menu
+zstyle ':completion:*:warnings' format '%F{red}-- no matches found --%f'
+zstyle ':completion:*:descriptions' format '%F{yellow}-- %d --%f'
+zstyle ':completion:*:messages' format '%F{cyan}-- %d --%f'
+zstyle ':completion:*' format '%F{yellow}-- %d --%f'
