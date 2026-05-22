@@ -17,7 +17,7 @@ Once installed and you've opened a new shell:
 - **`→`** (right arrow) — accept the grey ghost-text suggestion from `zsh-autosuggestions`
 
 ## Contents
-- `install.sh` — bootstraps everything on a fresh macOS or Ubuntu
+- `install.sh` — bootstraps everything on a fresh macOS, Ubuntu/Debian, or Arch/CachyOS
 - `uninstall.sh` — reverts the machine (removes oh-my-zsh, theme, .zshrc, fzf, font)
 - `mytheme.zsh-theme` — the custom oh-my-zsh theme (powerline-style segments: 📂 path, ⎇ branch, 👾 venv, ⚡ time)
 - `zshrc` — drop-in `~/.zshrc` with theme, fzf keybindings, custom plugins (fzf-tab, autosuggestions, fast-syntax-highlighting), and tab-completion settings
@@ -28,15 +28,16 @@ chmod +x install.sh
 ./install.sh
 ```
 
-The script auto-detects the OS (macOS or Ubuntu/Debian) and uses the right package manager:
+The script auto-detects the OS (macOS, Ubuntu/Debian, or Arch/CachyOS) and uses the right package manager:
 
-1. **OS detection** — exits early on anything other than macOS or Ubuntu/Debian
-2. **Package manager** — installs Homebrew on macOS; runs `apt-get update` and installs `curl git unzip fontconfig` on Ubuntu
-3. **zsh** — `brew install zsh` (macOS) or `apt-get install zsh` (Ubuntu)
+1. **OS detection** — exits early on anything other than macOS, Ubuntu/Debian, or Arch/CachyOS
+2. **Package manager** — installs Homebrew on macOS; runs `apt-get update` and installs `curl git unzip fontconfig` on Ubuntu; runs `pacman -Sy` on Arch/CachyOS
+3. **zsh** — `brew install zsh` (macOS), `apt-get install zsh` (Ubuntu), or `pacman -S --needed zsh` (Arch/CachyOS)
 4. **Meslo Nerd Font**
    - macOS: `brew install --cask font-meslo-lg-nerd-font`
    - Ubuntu: downloads `Meslo.zip` from the [nerd-fonts v3.4.0 release](https://github.com/ryanoasis/nerd-fonts/releases/tag/v3.4.0) into `~/.local/share/fonts/Meslo/`, then runs `fc-cache`
-5. **fzf** — `brew install fzf` or `apt-get install fzf`; keybindings wired up by `~/.zshrc`
+   - Arch/CachyOS: installs the official `ttf-meslo-nerd` package from the Arch repositories, then refreshes the font cache
+5. **fzf** — `brew install fzf`, `apt-get install fzf`, or `pacman -S --needed fzf`; keybindings wired up by `~/.zshrc`
 6. **oh-my-zsh** — installed via the official unattended installer (skipped if already present)
 7. **Custom plugins** — cloned into `~/.oh-my-zsh/custom/plugins/`:
    - [fzf-tab](https://github.com/Aloxaf/fzf-tab) — fuzzy `<Tab>` completion for every command
@@ -49,6 +50,10 @@ After it finishes, set your terminal font to **MesloLGM Nerd Font** (or any Mesl
 - macOS Terminal.app / iTerm2 — Settings → Profiles → Text → Font
 - GNOME Terminal — Preferences → your profile → Text → Custom font
 - Konsole — Settings → Edit Current Profile → Appearance → Font
+
+### Arch/CachyOS notes
+
+On Arch and CachyOS, the installer uses `pacman` for the system packages. It refreshes the package database with `pacman -Sy`, installs `zsh` and `fzf` with `--needed`, and uses the repository package `ttf-meslo-nerd` instead of downloading the font zip manually.
 
 ### Activating the new shell
 

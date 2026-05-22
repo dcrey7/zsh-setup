@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Bootstraps a complete zsh prompt setup on a fresh macOS or Ubuntu:
+# Bootstraps a complete zsh prompt setup on a fresh macOS, Ubuntu, or Arch:
 #   pkg manager -> Meslo Nerd Font -> fzf -> oh-my-zsh -> custom plugins -> theme + .zshrc -> default shell
-# macOS uses Homebrew; Ubuntu uses apt + a direct Nerd Font download.
+# macOS uses Homebrew; Ubuntu uses apt + a direct Nerd Font download; Arch uses pacman.
 # Custom plugins: fzf-tab, zsh-autosuggestions, fast-syntax-highlighting
 # Idempotent -- safe to re-run.
 set -euo pipefail
@@ -19,13 +19,16 @@ case "$(uname -s)" in
     if [[ -r /etc/os-release ]] && grep -qiE '^(ID|ID_LIKE)=.*(ubuntu|debian)' /etc/os-release; then
       OS="ubuntu"
       echo "    Ubuntu/Debian detected."
+    elif [[ -r /etc/os-release ]] && grep -qiE '^(ID|ID_LIKE)=.*(arch|cachyos)' /etc/os-release; then
+      OS="arch"
+      echo "    Arch/CachyOS detected."
     else
-      echo "    ERROR: Linux detected but not Ubuntu/Debian. Only macOS and Ubuntu are supported." >&2
+      echo "    ERROR: Linux detected but not Ubuntu/Debian or Arch/CachyOS. Only macOS, Ubuntu/Debian, and Arch/CachyOS are supported." >&2
       exit 1
     fi
     ;;
   *)
-    echo "    ERROR: Unsupported OS '$(uname -s)'. Only macOS and Ubuntu are supported." >&2
+    echo "    ERROR: Unsupported OS '$(uname -s)'. Only macOS, Ubuntu/Debian, and Arch/CachyOS are supported." >&2
     exit 1
     ;;
 esac
@@ -44,11 +47,18 @@ if [[ "$OS" == "macos" ]]; then
   else
     echo "    Already installed: $(brew --version | head -1)"
   fi
-else
+elif [[ "$OS" == "ubuntu" ]]; then
   echo "    Refreshing apt index (sudo required)..."
   sudo apt-get update -y
   echo "    Installing prerequisites (curl, git, unzip, fontconfig)..."
   sudo apt-get install -y curl git unzip fontconfig
+elif [[ "$OS" == "arch" ]]; then
+  if ! command -v pacman >/dev/null 2>&1; then
+    echo "    ERROR: pacman not found on Arch system." >&2
+    exit 1
+  fi
+  echo "    Refreshing pacman database..."
+  sudo pacman -Sy --noconfirm
 fi
 
 # ---------------------------------------------------------------------------
@@ -57,9 +67,12 @@ if ! command -v zsh >/dev/null 2>&1; then
   if [[ "$OS" == "macos" ]]; then
     echo "    Installing zsh via Homebrew..."
     brew install zsh
-  else
+  elif [[ "$OS" == "ubuntu" ]]; then
     echo "    Installing zsh via apt..."
     sudo apt-get install -y zsh
+  elif [[ "$OS" == "arch" ]]; then
+    echo "    Installing zsh via pacman..."
+    sudo pacman -S --noconfirm --needed zsh
   fi
 else
   echo "    Already installed: $(zsh --version)"
@@ -74,7 +87,7 @@ if [[ "$OS" == "macos" ]]; then
     echo "    Installing via Homebrew Cask..."
     brew install --cask font-meslo-lg-nerd-font
   fi
-else
+elif [[ "$OS" == "ubuntu" ]]; then
   font_dir="$HOME/.local/share/fonts/Meslo"
   if fc-list 2>/dev/null | grep -qi 'MesloLG.*Nerd Font'; then
     echo "    Already installed (found via fc-list)."
@@ -89,6 +102,13 @@ else
     echo "    Refreshing font cache..."
     fc-cache -f "$font_dir"
   fi
+elif [[ "$OS" == "arch" ]]; then
+  if pacman -Qq ttf-meslo-nerd >/dev/null 2>&1; then
+    echo "    Meslo Nerd Font already installed."
+  else
+    sudo pacman -S --noconfirm --needed ttf-meslo-nerd
+  fi
+  fc-cache -fv >/dev/null 2>&1 || true
 fi
 
 # ---------------------------------------------------------------------------
@@ -100,13 +120,15 @@ if [[ "$OS" == "macos" ]]; then
     echo "    Installing via Homebrew..."
     brew install fzf
   fi
-else
+elif [[ "$OS" == "ubuntu" ]]; then
   if dpkg -s fzf >/dev/null 2>&1; then
     echo "    Already installed: $(fzf --version)"
   else
     echo "    Installing via apt..."
     sudo apt-get install -y fzf
   fi
+elif [[ "$OS" == "arch" ]]; then
+  sudo pacman -S --noconfirm --needed fzf
 fi
 echo "    Keybindings wired up by '~/.zshrc' via 'source <(fzf --zsh)'"
 
